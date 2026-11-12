@@ -47,7 +47,7 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.service.Get()
 	if err != nil {
 		log.Printf("task handler: get: %v\n", err)
-		http.Error(w, "interna server error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *handler) Check(w http.ResponseWriter, r *http.Request) {
 	err := h.service.Check()
 	if err != nil {
 		log.Printf("task handler: check: %v\n", err)
-		http.Error(w, "interna server error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	task, err := h.service.Create(input.Title, input.Status)
 	if err != nil {
 		log.Printf("task handler: create: %v\n", err)
-		http.Error(w, "interna server error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -106,13 +106,13 @@ func (h *handler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	task, err := h.service.GetByID(id)
 	if err != nil {
-		log.Printf("task handler: get by id: %v\n", err)
 		if errors.Is(err, errs.ErrTaskNotFound) {
 			http.Error(w, "task not found", http.StatusNotFound)
 			return
 		}
 
-		http.Error(w, "interna server error", http.StatusInternalServerError)
+		log.Printf("task handler: get by id: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -168,12 +168,12 @@ func (h *handler) ReplaceByID(w http.ResponseWriter, r *http.Request) {
 
 	task, err := h.service.ReplaceByID(id, input.Title, input.Status)
 	if err != nil {
-		log.Printf("task handler: replace by id: %v\n", err)
 		if errors.Is(err, errs.ErrTaskNotFound) {
 			http.Error(w, "task not found", http.StatusNotFound)
 			return
 		}
 
+		log.Printf("task handler: replace by id: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -194,12 +194,12 @@ func (h *handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.DeleteByID(id); err != nil {
-		log.Printf("task handler: replace by id: %v\n", err)
 		if errors.Is(err, errs.ErrTaskNotFound) {
 			http.Error(w, "task not found", http.StatusNotFound)
 			return
 		}
 
+		log.Printf("task handler: replace by id: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
