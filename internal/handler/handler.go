@@ -2,10 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
 
+	errs "github.com/galiullindo/todolist-rest-api/internal/errors"
 	"github.com/galiullindo/todolist-rest-api/internal/model"
 )
 
@@ -85,15 +87,19 @@ func (h *handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		log.Println("handler:", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("task handler: get by id: %v\n", err)
+		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
 	task, err := h.svc.GetByID(id)
 	if err != nil {
-		log.Println("handler:", err)
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, errs.ErrTaskNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		log.Printf("task handler: get by id: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
