@@ -18,6 +18,7 @@ type Service interface {
 	GetByID(id int64) (model.Task, error)
 	CheckExistenceByID(id int64) (bool, error)
 	ReplaceByID(id int64, title string, status string) (model.Task, error)
+	DeleteByID(id int64) error
 }
 
 type handler struct {
@@ -172,5 +173,22 @@ func (h *handler) ReplaceByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		log.Printf("task handler: delete by id: %v\n", err)
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
 
+	if err := h.svc.DeleteByID(id); err != nil {
+		if errors.Is(err, errs.ErrTaskNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		log.Printf("task handler: replace by id: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
