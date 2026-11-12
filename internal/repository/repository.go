@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/galiullindo/todolist-rest-api/internal/model"
@@ -66,6 +67,29 @@ func (r *repository) Check() error {
 	return nil
 }
 
+func (r *repository) Create(task model.Task) (model.Task, error) {
+	result, err := r.db.Exec("INSERT INTO tasks (title, status) VALUES (?, ?)", task.Title, task.Status)
+	if err != nil {
+		return task, fmt.Errorf("task repository: check: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return task, fmt.Errorf("task repository: check: %w", err)
+	}
+	if rows != 1 {
+		return task, fmt.Errorf("task repository: check: %w: expected 1, got %d", err, rows)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return task, fmt.Errorf("task repository: check: %w", err)
+	}
+	task.ID = id
+
+	return task, nil
+}
+
 func (r *repository) GetByID(id int64) (model.Task, error) {
 	var task model.Task
 	row := r.db.QueryRow("SELECT id, title, status FROM tasks WHERE id=?", id)
@@ -75,23 +99,6 @@ func (r *repository) GetByID(id int64) (model.Task, error) {
 		log.Println("repository:", err)
 		return task, err
 	}
-
-	return task, nil
-}
-
-func (r *repository) Create(task model.Task) (model.Task, error) {
-	result, err := r.db.Exec("INSERT INTO tasks (title, status) VALUES (?, ?)", task.Title, task.Status)
-	if err != nil {
-		log.Println("repository:", err)
-		return task, err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		log.Println("repository:", err)
-		return task, err
-	}
-	task.ID = id
 
 	return task, nil
 }
