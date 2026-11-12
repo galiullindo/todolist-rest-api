@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 
+	errs "github.com/galiullindo/todolist-rest-api/internal/errors"
 	"github.com/galiullindo/todolist-rest-api/internal/model"
 )
 
@@ -49,8 +49,7 @@ func (r *repository) Check() error {
 	var task model.Task
 	row := r.db.QueryRow("SELECT id, title, status FROM tasks LIMIT 1")
 
-	err := row.Scan(&task.ID, &task.Title, &task.Status)
-	if err != nil {
+	if err := row.Scan(&task.ID, &task.Title, &task.Status); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
@@ -62,7 +61,11 @@ func (r *repository) Check() error {
 }
 
 func (r *repository) Create(task model.Task) (model.Task, error) {
-	result, err := r.db.Exec("INSERT INTO tasks (title, status) VALUES (?, ?)", task.Title, task.Status)
+	result, err := r.db.Exec("INSERT INTO tasks (title, status) VALUES (@title, @status)",
+		sql.Named("title", task.Title),
+		sql.Named("status", task.Status),
+	)
+
 	if err != nil {
 		return task, fmt.Errorf("task repository: check: %w", err)
 	}
@@ -86,13 +89,84 @@ func (r *repository) Create(task model.Task) (model.Task, error) {
 
 func (r *repository) GetByID(id int64) (model.Task, error) {
 	var task model.Task
-	row := r.db.QueryRow("SELECT id, title, status FROM tasks WHERE id=?", id)
+	row := r.db.QueryRow("SELECT id, title, status FROM tasks WHERE id=?",
+		sql.Named("id", id),
+	)
 
-	err := row.Scan(&task.ID, &task.Title, &task.Status)
-	if err != nil {
-		log.Println("repository:", err)
-		return task, err
+	if err := row.Scan(&task.ID, &task.Title, &task.Status); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return task, errs.ErrTaskNotFound
+		}
+
+		return task, fmt.Errorf("task repository: check: %w", err)
 	}
 
 	return task, nil
+}
+
+func (r *repository) CheckExistenceByID(id int64) error {
+	var task model.Task
+	row := r.db.QueryRow("SELECT id, title, status FROM tasks WHERE id = @id",
+		sql.Named("id", id),
+	)
+
+	if err := row.Scan(&task.ID, &task.Title, &task.Status); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errs.ErrTaskNotFound
+		}
+
+		return fmt.Errorf("task repository: check: %w", err)
+	}
+
+	return nil
+}
+
+func (r *repository) ReplaceByID(task model.Task) (model.Task, error) {
+	result, err := r.db.Exec("UPDATE tasks SET title = @title, status = @status WHERE tasks.id = @id",
+		sql.Named("id", task.ID),
+		sql.Named("title", task.Title),
+		sql.Named("status", task.Status),
+	)
+
+	if err != nil {
+		return task, fmt.Errorf("task repository: replace by id: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return task, fmt.Errorf("task repository: replace by id: %w", err)
+	}
+
+	if rows == 0 {
+		return task, errs.ErrTaskNotFound
+	}
+	if rows != 1 {
+		return task, fmt.Errorf("task repository: replace by id: %w: expected 1, got %d", err, rows)
+	}
+
+	return task, nil
+}
+
+func (r *repository) DeleteByID(id int64) error {
+	result, err := r.db.Exec("DELETE FROM tasks WHERE tasks.id = @id",
+		sql.Named("id", id),
+	)
+
+	if err != nil {
+		return fmt.Errorf("task repository: delete by id: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("task repository: delete by id: %w", err)
+	}
+
+	if rows == 0 {
+		return errs.ErrTaskNotFound
+	}
+	if rows != 1 {
+		return fmt.Errorf("task repository: delete by id: %w: expected 1, got %d", err, rows)
+	}
+
+	return nil
 }
