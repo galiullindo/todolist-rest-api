@@ -23,7 +23,7 @@ import (
 func testServer(db *sql.DB) *httptest.Server {
 	taskRepo := taskRepository.New(db)
 	taskSvc := taskService.New(taskRepo)
-	taskHndl := taskHandler.New(taskSvc)
+	taskHndl := taskHandler.NewHandler(taskSvc)
 
 	mux := http.NewServeMux()
 	taskHndl.RegisterRoutes(mux)
