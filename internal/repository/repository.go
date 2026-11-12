@@ -17,30 +17,31 @@ func New(db *sql.DB) *repository {
 	}
 }
 
-func (r *repository) GetAll() ([]model.Task, error) {
+func (r *repository) Get() ([]model.Task, error) {
 	rows, err := r.db.Query("SELECT id, title, status FROM tasks")
 	if err != nil {
-		log.Println("repository:", err)
+		log.Printf("task repository: get: %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
-	tasks := make([]model.Task, 0)
 
+	tasks := make([]model.Task, 0)
 	for rows.Next() {
 		var task model.Task
 		if err := rows.Scan(&task.ID, &task.Title, &task.Status); err != nil {
-			log.Println("repository:", err)
+			log.Printf("task repository: get: %v\n", err)
 			return nil, err
 		}
 		tasks = append(tasks, task)
 	}
 
 	if err := rows.Close(); err != nil {
-		log.Println("repository:", err)
+		log.Printf("task repository: get: %v\n", err)
 		return nil, err
 	}
+
 	if err := rows.Err(); err != nil {
-		log.Println("repository:", err)
+		log.Printf("task repository: get: %v\n", err)
 		return nil, err
 	}
 
