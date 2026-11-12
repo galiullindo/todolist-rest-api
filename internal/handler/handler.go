@@ -17,7 +17,7 @@ type Service interface {
 	Create(title string, status string) (model.Task, error)
 
 	GetByID(id int64) (model.Task, error)
-	CheckExistenceByID(id int64) (bool, error)
+	CheckExistenceByID(id int64) error
 	ReplaceByID(id int64, title string, status string) (model.Task, error)
 	DeleteByID(id int64) error
 }
@@ -131,15 +131,14 @@ func (h *handler) CheckByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := h.service.CheckExistenceByID(id)
-	if err != nil {
+	if err := h.service.CheckExistenceByID(id); err != nil {
+		if errors.Is(err, errs.ErrTaskNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		log.Printf("task handler: check by id: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if !exists {
-		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
