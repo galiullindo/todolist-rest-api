@@ -17,6 +17,7 @@ type Service interface {
 
 	GetByID(id int64) (model.Task, error)
 	CheckExistenceByID(id int64) (bool, error)
+	ReplaceByID(id int64, title string, status string) (model.Task, error)
 }
 
 type handler struct {
@@ -135,7 +136,39 @@ func (h *handler) CheckByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) ReplaceByID(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		log.Printf("task handler: replace by id: %v\n", err)
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
 
+	var input struct {
+		Title  string
+		Status string
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		log.Printf("task handler: replace by id: %v\n", err)
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	task, err := h.svc.ReplaceByID(id, input.Title, input.Status)
+	if err != nil {
+		if errors.Is(err, errs.ErrTaskNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		log.Printf("task handler: replace by id: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		log.Printf("task handler: replace by id: %v\n", err)
+	}
 }
 
 func (h *handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
