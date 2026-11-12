@@ -114,28 +114,62 @@ cd build
 
 ### Задачи
 
-#### Получить все задачи
+#### `GET /tasks`
+
+Возвращает список всех задач.
 
 ```bash
 curl http://localhost:8080/tasks
 ```
 
-**Ответ**: `200 OK` с массивом задач в JSON
+#### `HEAD /tasks` 
 
-#### Получить задачу по id
+Возвращает метаданные списка всех задач
+
+```bash
+curl -X HEAD http://localhost:8080/tasks
+```
+
+#### `POST /tasks`
+
+Создает новую задачу
+
+```bash
+curl -X POST http://localhost:8080/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Новая задача","status":"Новый статус"}'
+```
+
+#### `GET /tasks/{id}` 
+
+Возвращает одну задачу по id
 
 ```bash
 curl http://localhost:8080/tasks/1
 ```
 
-**Ответ**: `200 OK` с задачей в JSON
+#### `HEAD /tasks/{id}`
 
-#### Создать задачу
+Возвращает метаданные одной задачи по id
 
 ```bash
-curl -X POST http://localhost:8080/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Новая задача", "status":"статус задачи"}'
+curl -X HEAD http://localhost:8080/tasks/1
 ```
 
-**Ответ**: `201 Created` с созданной задачей в JSON
+#### `PUT /tasks/{id}`
+
+Заменяет все поля одной задачи по id
+
+```bash
+curl -X PUT http://localhost:8080/tasks/1 \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Измененная задача","status":"Измененый статус"}'
+```
+
+#### `DELETE /tasks/{id}`
+
+Удаляет одну задачу по id
+
+```bash
+curl -X DELETE http://localhost:8080/tasks/1
+```
