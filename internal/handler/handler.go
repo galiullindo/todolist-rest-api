@@ -13,6 +13,7 @@ import (
 
 type Service interface {
 	Get() ([]model.Task, error)
+	Check() error
 	Create(title string, status string) (model.Task, error)
 
 	GetByID(id int64) (model.Task, error)
@@ -57,6 +58,13 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) Check(w http.ResponseWriter, r *http.Request) {
+	err := h.svc.Check()
+	if err != nil {
+		log.Printf("task handler: check: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
