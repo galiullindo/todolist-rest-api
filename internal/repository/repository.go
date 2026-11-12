@@ -22,29 +22,24 @@ func New(db *sql.DB) *repository {
 func (r *repository) Get() ([]model.Task, error) {
 	rows, err := r.db.Query("SELECT id, title, status FROM tasks")
 	if err != nil {
-		log.Printf("task repository: get: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("task repository: get: %w", err)
 	}
 	defer rows.Close()
-
 	tasks := make([]model.Task, 0)
+
 	for rows.Next() {
 		var task model.Task
 		if err := rows.Scan(&task.ID, &task.Title, &task.Status); err != nil {
-			log.Printf("task repository: get: %v\n", err)
-			return nil, err
+			return nil, fmt.Errorf("task repository: get: %w", err)
 		}
 		tasks = append(tasks, task)
 	}
 
 	if err := rows.Close(); err != nil {
-		log.Printf("task repository: get: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("task repository: get: %w", err)
 	}
-
 	if err := rows.Err(); err != nil {
-		log.Printf("task repository: get: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("task repository: get: %w", err)
 	}
 
 	return tasks, nil
@@ -56,12 +51,11 @@ func (r *repository) Check() error {
 
 	err := row.Scan(&task.ID, &task.Title, &task.Status)
 	if err != nil {
-		log.Printf("task repository: check: %v\n", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("task repository: check: %w", err)
 	}
 
 	return nil
