@@ -45,13 +45,14 @@ func (h *handler) RegisterRoutes(mux *http.ServeMux) {
 func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.svc.Get()
 	if err != nil {
-		log.Println("handler:", err)
+		log.Printf("task handler: get: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
-		log.Println("handler:", err)
+		log.Printf("task handler: get: %v\n", err)
 	}
 }
 
