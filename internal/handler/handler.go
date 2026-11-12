@@ -23,12 +23,12 @@ type Service interface {
 }
 
 type handler struct {
-	svc Service
+	service Service
 }
 
-func NewHandler(svc Service) *handler {
+func NewHandler(service Service) *handler {
 	return &handler{
-		svc: svc,
+		service: service,
 	}
 }
 
@@ -44,10 +44,10 @@ func (h *handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.svc.Get()
+	tasks, err := h.service.Get()
 	if err != nil {
 		log.Printf("task handler: get: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "interna server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -58,10 +58,10 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) Check(w http.ResponseWriter, r *http.Request) {
-	err := h.svc.Check()
+	err := h.service.Check()
 	if err != nil {
 		log.Printf("task handler: check: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "interna server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -77,14 +77,15 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Printf("task handler: create: %v\n", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	task, err := h.svc.Create(input.Title, input.Status)
+	task, err := h.service.Create(input.Title, input.Status)
 	if err != nil {
 		log.Printf("task handler: create: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "interna server error", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -103,20 +104,21 @@ func (h *handler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.svc.GetByID(id)
+	task, err := h.service.GetByID(id)
 	if err != nil {
+		log.Printf("task handler: get by id: %v\n", err)
 		if errors.Is(err, errs.ErrTaskNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, "task not found", http.StatusNotFound)
 			return
 		}
-		log.Printf("task handler: get by id: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		http.Error(w, "interna server error", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(task); err != nil {
-		log.Println("handler:", err)
+		log.Printf("task handler: get by id: %v\n", err)
 	}
 }
 
@@ -129,7 +131,7 @@ func (h *handler) CheckByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := h.svc.CheckExistenceByID(id)
+	exists, err := h.service.CheckExistenceByID(id)
 	if err != nil {
 		log.Printf("task handler: check by id: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -165,14 +167,16 @@ func (h *handler) ReplaceByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.svc.ReplaceByID(id, input.Title, input.Status)
+	task, err := h.service.ReplaceByID(id, input.Title, input.Status)
 	if err != nil {
+		log.Printf("task handler: replace by id: %v\n", err)
 		if errors.Is(err, errs.ErrTaskNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, "task not found", http.StatusNotFound)
 			return
 		}
-		log.Printf("task handler: replace by id: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -190,13 +194,15 @@ func (h *handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.svc.DeleteByID(id); err != nil {
+	if err := h.service.DeleteByID(id); err != nil {
+		log.Printf("task handler: replace by id: %v\n", err)
 		if errors.Is(err, errs.ErrTaskNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, "task not found", http.StatusNotFound)
 			return
 		}
-		log.Printf("task handler: replace by id: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
