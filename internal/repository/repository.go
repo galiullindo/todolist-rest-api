@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/galiullindo/todolist-rest-api/internal/model"
@@ -46,6 +47,23 @@ func (r *repository) Get() ([]model.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func (r *repository) Check() error {
+	var task model.Task
+	row := r.db.QueryRow("SELECT id, title, status FROM tasks LIMIT 1")
+
+	err := row.Scan(&task.ID, &task.Title, &task.Status)
+	if err != nil {
+		log.Printf("task repository: check: %v\n", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (r *repository) GetByID(id int64) (model.Task, error) {
