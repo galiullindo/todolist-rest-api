@@ -89,7 +89,7 @@ func (r *repository) Create(task model.Task) (model.Task, error) {
 
 func (r *repository) GetByID(id int64) (model.Task, error) {
 	var task model.Task
-	row := r.db.QueryRow("SELECT id, title, status FROM tasks WHERE id=?",
+	row := r.db.QueryRow("SELECT id, title, status FROM tasks WHERE id = @id",
 		sql.Named("id", id),
 	)
 
