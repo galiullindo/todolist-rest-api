@@ -19,7 +19,7 @@ func New(db *sql.DB) *repository {
 	}
 }
 
-func (r *repository) Get() ([]model.Task, error) {
+func (r *repository) GetList() ([]model.Task, error) {
 	rows, err := r.db.Query("SELECT id, title, status FROM tasks")
 	if err != nil {
 		return nil, fmt.Errorf("task repository: get: %w", err)
@@ -45,7 +45,7 @@ func (r *repository) Get() ([]model.Task, error) {
 	return tasks, nil
 }
 
-func (r *repository) Check() error {
+func (r *repository) CheckList() error {
 	var task model.Task
 	row := r.db.QueryRow("SELECT id, title, status FROM tasks LIMIT 1")
 

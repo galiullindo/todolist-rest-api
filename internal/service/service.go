@@ -5,8 +5,8 @@ import (
 )
 
 type Repository interface {
-	Get() ([]model.Task, error)
-	Check() error
+	GetList() ([]model.Task, error)
+	CheckList() error
 	Create(task model.Task) (model.Task, error)
 
 	GetByID(id int64) (model.Task, error)
@@ -25,12 +25,12 @@ func New(repo Repository) *service {
 	}
 }
 
-func (s *service) Get() ([]model.Task, error) {
-	return s.repo.Get()
+func (s *service) GetList() ([]model.Task, error) {
+	return s.repo.GetList()
 }
 
-func (s *service) Check() error {
-	return s.repo.Check()
+func (s *service) GetListMetadata() error {
+	return s.repo.CheckList()
 }
 
 func (s *service) Create(title string, status string) (model.Task, error) {
@@ -46,7 +46,7 @@ func (s *service) GetByID(id int64) (model.Task, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *service) CheckExistenceByID(id int64) error {
+func (s *service) GetByIDMetadata(id int64) error {
 	return s.repo.CheckExistenceByID(id)
 }
 

@@ -12,12 +12,12 @@ import (
 )
 
 type Service interface {
-	Get() ([]model.Task, error)
-	Check() error
+	GetList() ([]model.Task, error)
+	GetListMetadata() error
 	Create(title string, status string) (model.Task, error)
 
 	GetByID(id int64) (model.Task, error)
-	CheckExistenceByID(id int64) error
+	GetByIDMetadata(id int64) error
 	ReplaceByID(id int64, title string, status string) (model.Task, error)
 	DeleteByID(id int64) error
 }
@@ -33,18 +33,18 @@ func NewHandler(service Service) *handler {
 }
 
 func (h *handler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /tasks", h.Get)
-	mux.HandleFunc("HEAD /tasks", h.Check)
+	mux.HandleFunc("GET /tasks", h.GetList)
+	mux.HandleFunc("HEAD /tasks", h.GetListMetadata)
 	mux.HandleFunc("POST /tasks", h.Create)
 
 	mux.HandleFunc("GET /tasks/{id}", h.GetByID)
-	mux.HandleFunc("HEAD /tasks/{id}", h.CheckByID)
+	mux.HandleFunc("HEAD /tasks/{id}", h.GetByIDMetadata)
 	mux.HandleFunc("PUT /tasks/{id}", h.ReplaceByID)
 	mux.HandleFunc("DELETE /tasks/{id}", h.DeleteByID)
 }
 
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.service.Get()
+func (h *handler) GetList(w http.ResponseWriter, r *http.Request) {
+	tasks, err := h.service.GetList()
 	if err != nil {
 		log.Printf("task handler: get: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -57,8 +57,8 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) Check(w http.ResponseWriter, r *http.Request) {
-	err := h.service.Check()
+func (h *handler) GetListMetadata(w http.ResponseWriter, r *http.Request) {
+	err := h.service.GetListMetadata()
 	if err != nil {
 		log.Printf("task handler: check: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -122,7 +122,7 @@ func (h *handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) CheckByID(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetByIDMetadata(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -131,7 +131,7 @@ func (h *handler) CheckByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.CheckExistenceByID(id); err != nil {
+	if err := h.service.GetByIDMetadata(id); err != nil {
 		if errors.Is(err, errs.ErrTaskNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 			return
