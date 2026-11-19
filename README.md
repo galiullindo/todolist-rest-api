@@ -127,7 +127,7 @@ curl http://localhost:8080/tasks
 Возвращает метаданные списка всех задач
 
 ```bash
-curl -X HEAD http://localhost:8080/tasks
+curl --head http://localhost:8080/tasks
 ```
 
 #### `POST /tasks`
@@ -153,7 +153,7 @@ curl http://localhost:8080/tasks/1
 Возвращает метаданные одной задачи по id
 
 ```bash
-curl -X HEAD http://localhost:8080/tasks/1
+curl --head http://localhost:8080/tasks/1
 ```
 
 #### `PUT /tasks/{id}`
