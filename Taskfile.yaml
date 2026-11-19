@@ -69,11 +69,11 @@ tasks:
     deps: [build]
     vars:
       env: default
-    cmd: '{{.BUILD_DIR}}/{{.APP_NAME}} --env={{.env}} --configs-dir={{.CONFIGS_DIR}}'
+    cmd: '{{.BUILD_DIR}}/{{.APP_NAME}} --config={{.CONFIGS_DIR}}/config.yaml'
 
   e2e-test:
     desc: "Выполняет запуск e2e-тестов"
-    cmd: 'go test -v -cover -run TestAPI ./internal/tests/... -- --configs-dir={{.CONFIGS_DIR}}'
+    cmd: 'go test -v -cover -run TestAPI ./internal/tests/... -- --config={{.CONFIGS_DIR}}/config.test.yaml'
 
   docker-build:
     desc: "Выполняет сборку Docker-образа todolist-rest-api"
