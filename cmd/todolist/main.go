@@ -22,24 +22,15 @@ import (
 
 func main() {
 	var cliArguments struct {
-		configsDir string
-		env        string
+		configPath string
 	}
 
 	fs := flag.NewFlagSet("server", flag.ExitOnError)
-	fs.StringVar(&cliArguments.configsDir, "configs-dir", ".", "path to configs directory")
-	fs.StringVar(&cliArguments.env, "env", "default", "enviroment (prod, test, docker)")
+	fs.StringVar(&cliArguments.configPath, "config", "config.yaml", "path to config file")
 	fs.Parse(os.Args[1:])
 
-	log.Println("parse cli argument 'env'")
-	env, err := config.ParseEnv(cliArguments.env)
-	if err != nil {
-		log.Printf("parse cli argument 'env': %v\n", err)
-		return
-	}
-
 	log.Println("load config")
-	cfg, err := config.Load(cliArguments.configsDir, env)
+	cfg, err := config.Load(cliArguments.configPath)
 	if err != nil {
 		log.Printf("load config: %v\n", err)
 		return
