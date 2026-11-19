@@ -68,12 +68,12 @@ func createTask(t *testing.T, client *http.Client, url string, task model.Task) 
 func TestAPI(t *testing.T) {
 	args := trimTestFlags(os.Args[1:])
 
-	var configsDir string
+	var configPath string
 	fs := flag.NewFlagSet("e2e_test", flag.ExitOnError)
-	fs.StringVar(&configsDir, "configs-dir", ".", "path to configs directory")
+	fs.StringVar(&configPath, "config", "config.yaml", "path to config file")
 	fs.Parse(args)
 
-	cfg, err := config.Load(configsDir, config.EnvTest)
+	cfg, err := config.Load(configPath)
 	if err != nil {
 		t.Fatalf("load config: %v\n", err)
 	}
