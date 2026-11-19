@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/galiullindo/todolist-rest-api/internal/config"
-	taskHandler "github.com/galiullindo/todolist-rest-api/internal/handler"
-	taskRepository "github.com/galiullindo/todolist-rest-api/internal/repository"
-	taskService "github.com/galiullindo/todolist-rest-api/internal/service"
+	"github.com/galiullindo/todolist-rest-api/internal/handler"
+	"github.com/galiullindo/todolist-rest-api/internal/repository"
+	"github.com/galiullindo/todolist-rest-api/internal/service"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -25,7 +25,7 @@ func main() {
 		configPath string
 	}
 
-	fs := flag.NewFlagSet("server", flag.ExitOnError)
+	fs := flag.NewFlagSet("todolist", flag.ExitOnError)
 	fs.StringVar(&cliArguments.configPath, "config", "config.yaml", "path to config file")
 	fs.Parse(os.Args[1:])
 
@@ -50,12 +50,12 @@ func main() {
 		return
 	}
 
-	taskRepo := taskRepository.New(db)
-	taskSvc := taskService.New(taskRepo)
-	taskHndl := taskHandler.NewHandler(taskSvc)
+	taskRepository := repository.NewRepository(db)
+	taskService := service.NewService(taskRepository)
+	taskHandler := handler.NewHandler(taskService)
 
 	mux := http.NewServeMux()
-	taskHndl.RegisterRoutes(mux)
+	taskHandler.RegisterRoutes(mux)
 
 	server := &http.Server{
 		Addr:         net.JoinHostPort(cfg.Server.Host, cfg.Server.Port),
