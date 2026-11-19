@@ -73,7 +73,7 @@ tasks:
 
   e2e-test:
     desc: "Выполняет запуск e2e-тестов"
-    cmd: 'go test -v -cover -run TestAPI ./internal/tests/... -- --config={{.CONFIGS_DIR}}/config.test.yaml'
+    cmd: 'go test -v -cover ./internal/tests/e2e/... -- --config={{.CONFIGS_DIR}}/config.test.yaml'
 
   docker-build:
     desc: "Выполняет сборку Docker-образа todolist-rest-api"
