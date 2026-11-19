@@ -46,9 +46,8 @@ func trimTestFlags(args []string) []string {
 	return []string{}
 }
 
-func createTask(t *testing.T, url string, task model.Task) {
+func createTask(t *testing.T, client *http.Client, url string, task model.Task) {
 	t.Helper()
-	client := testClient()
 
 	var body bytes.Buffer
 	if err := json.NewEncoder(&body).Encode(&task); err != nil {
@@ -111,7 +110,7 @@ func TestAPI(t *testing.T) {
 
 	client := testClient()
 
-	t.Run("GET /tasks возвращает пустой список", func(t *testing.T) {
+	t.Run("GET /tasks возвращает пустой список задач", func(t *testing.T) {
 		want := []model.Task{}
 
 		resp, err := client.Get(server.URL + "/tasks")
@@ -131,6 +130,18 @@ func TestAPI(t *testing.T) {
 
 		if !slices.Equal(tasks, want) {
 			t.Errorf("got %v, want %v\n", tasks, want)
+		}
+	})
+
+	t.Run("HEAD /tasks возвращает метаданные списка задач", func(t *testing.T) {
+		resp, err := client.Head(server.URL + "/tasks")
+		if err != nil {
+			t.Errorf("client head: %v\n", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("response status code got %d, want %d\n", resp.StatusCode, http.StatusOK)
 		}
 	})
 
@@ -186,7 +197,7 @@ func TestAPI(t *testing.T) {
 		}
 
 		for _, task := range want {
-			createTask(t, server.URL+"/tasks", task)
+			createTask(t, client, server.URL+"/tasks", task)
 		}
 
 		resp, err := client.Get(server.URL + "/tasks")
@@ -213,7 +224,7 @@ func TestAPI(t *testing.T) {
 		defer rollback()
 		want := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
 
-		createTask(t, server.URL+"/tasks", want)
+		createTask(t, client, server.URL+"/tasks", want)
 
 		resp, err := client.Get(server.URL + "/tasks/1")
 		if err != nil {
@@ -247,7 +258,7 @@ func TestAPI(t *testing.T) {
 		}
 	})
 
-	t.Run("GET /tasks/{id} возвращает 404 для несуществующего id", func(t *testing.T) {
+	t.Run("GET /tasks/{id} возвращает 404 для несуществующей задчи", func(t *testing.T) {
 		resp, err := client.Get(server.URL + "/tasks/1")
 		if err != nil {
 			t.Errorf("client get: %v\n", err)
@@ -256,6 +267,198 @@ func TestAPI(t *testing.T) {
 
 		if resp.StatusCode != http.StatusNotFound {
 			t.Errorf("response status code got %d, want %d\n", resp.StatusCode, http.StatusNotFound)
+		}
+	})
+
+	t.Run("HEAD /tasks/{id} возвращает 200 для существующей задачи", func(t *testing.T) {
+		defer rollback()
+		want := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
+
+		createTask(t, client, server.URL+"/tasks", want)
+
+		resp, err := client.Head(server.URL + "/tasks/1")
+		if err != nil {
+			t.Errorf("client head: %v\n", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("response status code got %d, want %d\n", resp.StatusCode, http.StatusOK)
+		}
+	})
+
+	t.Run("HEAD /tasks/{id} возвращает 400 для невалидного id", func(t *testing.T) {
+		resp, err := client.Head(server.URL + "/tasks/abc")
+		if err != nil {
+			t.Errorf("client head: %v\n", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("response status code got %d, want %d\n", resp.StatusCode, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("HEAD /tasks/{id} возвращает 404 для несуществующей задачи", func(t *testing.T) {
+		resp, err := client.Head(server.URL + "/tasks/1")
+		if err != nil {
+			t.Errorf("client head: %v\n", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("response status code got %d, want %d\n", resp.StatusCode, http.StatusNotFound)
+		}
+	})
+
+	t.Run("PUT /tasks/{id} заменяет все поля задачи по id", func(t *testing.T) {
+		defer rollback()
+
+		initialTask := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
+		createTask(t, client, server.URL+"/tasks", initialTask)
+
+		want := model.Task{ID: 1, Title: "Измененная задача", Status: "Измененный статус"}
+
+		var body bytes.Buffer
+		if err := json.NewEncoder(&body).Encode(&want); err != nil {
+			t.Errorf("encode response body: %v\n", err)
+		}
+
+		req, err := http.NewRequest(http.MethodPut, server.URL+"/tasks/1", &body)
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("status code got %v, want %v\n", resp.StatusCode, http.StatusOK)
+		}
+
+		var got model.Task
+		if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
+			t.Error(err)
+		}
+
+		if got != want {
+			t.Errorf("got %v, want %v\n", got, want)
+		}
+	})
+
+	t.Run("PUT /tasks/{id} возвращает 400 для невалидного id", func(t *testing.T) {
+		body := bytes.NewBuffer([]byte(`{"id":1,"title":"Новая задача","status":"Новый статус"}`))
+		req, err := http.NewRequest(http.MethodPut, server.URL+"/tasks/abc", body)
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("status code got %v, want %v\n", resp.StatusCode, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("PUT /tasks/{id} возвращает 400 для невалидного JSON", func(t *testing.T) {
+		body := bytes.NewBuffer([]byte(`{invalid json}`))
+		req, err := http.NewRequest(http.MethodPut, server.URL+"/tasks/abc", body)
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("status code got %v, want %v\n", resp.StatusCode, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("PUT /tasks/{id} возвращает 404 для несуществующего id", func(t *testing.T) {
+		body := bytes.NewBuffer([]byte(`{"id":1,"title":"Новая задача","status":"Новый статус"}`))
+		req, err := http.NewRequest(http.MethodPut, server.URL+"/tasks/1", body)
+		if err != nil {
+			t.Error(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("status code got %v, want %v\n", resp.StatusCode, http.StatusNotFound)
+		}
+	})
+
+	t.Run("DELETE /tasks/{id} удаляет задачу по id", func(t *testing.T) {
+		defer rollback()
+		initialTask := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
+		createTask(t, client, server.URL+"/tasks", initialTask)
+
+		req, err := http.NewRequest(http.MethodDelete, server.URL+"/tasks/1", nil)
+		if err != nil {
+			t.Error(err)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusNoContent {
+			t.Errorf("status code got %v, want %v\n", resp.StatusCode, http.StatusNoContent)
+		}
+	})
+
+	t.Run("DELETE /tasks/{id} возвращает 400 для невалидного id", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, server.URL+"/tasks/abc", nil)
+		if err != nil {
+			t.Error(err)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("status code got %v, want %v\n", resp.StatusCode, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("DELETE /tasks/{id} возвращает 404 для несуществующего id", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, server.URL+"/tasks/1", nil)
+		if err != nil {
+			t.Error(err)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("status code got %v, want %v\n", resp.StatusCode, http.StatusNotFound)
 		}
 	})
 }
