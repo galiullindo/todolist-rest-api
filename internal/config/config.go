@@ -20,19 +20,8 @@ type DatabaseConfig struct {
 	URI string `yaml:"uri"`
 }
 
-func Load(path string, env Env) (*Config, error) {
-	var configFile string
-	switch env {
-	case EnvProd:
-		configFile = "config.prod.yaml"
-	case EnvTest:
-		configFile = "config.test.yaml"
-	case EnvDocker:
-		configFile = "config.docker.yaml"
-	default:
-		configFile = "config.yaml"
-	}
-	configPath := filepath.Clean(filepath.Join(path, configFile))
+func Load(path string) (*Config, error) {
+	configPath := filepath.Clean(path)
 
 	var cfg Config
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
