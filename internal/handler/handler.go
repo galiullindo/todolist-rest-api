@@ -47,22 +47,22 @@ func (h *handler) GetList(w http.ResponseWriter, r *http.Request) {
 	taskList, err := h.service.GetList()
 	if err != nil {
 		log.Printf("get list: %v\n", err)
-		h.RespondErrorJSON(w, "internal server error", http.StatusInternalServerError)
+		h.respondJSONError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	h.RespondJSON(w, &taskList, http.StatusOK)
+	h.respondJSON(w, &taskList, http.StatusOK)
 }
 
 func (h *handler) GetListMetadata(w http.ResponseWriter, r *http.Request) {
 	err := h.service.GetListMetadata()
 	if err != nil {
 		log.Printf("get list metadata: %v\n", err)
-		h.RespondErrorJSON(w, "internal server error", http.StatusInternalServerError)
+		h.respondJSONError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	h.RespondJSON(w, nil, http.StatusOK)
+	h.respondJSON(w, nil, http.StatusOK)
 }
 
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -73,18 +73,18 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Printf("create: %v\n", err)
-		h.RespondErrorJSON(w, "invalid JSON", http.StatusBadRequest)
+		h.respondJSONError(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	task, err := h.service.Create(input.Title, input.Status)
 	if err != nil {
 		log.Printf("create: %v\n", err)
-		h.RespondErrorJSON(w, "internal server error", http.StatusInternalServerError)
+		h.respondJSONError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	h.RespondJSON(w, &task, http.StatusCreated)
+	h.respondJSON(w, &task, http.StatusCreated)
 }
 
 func (h *handler) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -92,23 +92,23 @@ func (h *handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		log.Printf("get by id: %v\n", err)
-		h.RespondErrorJSON(w, "invalid id", http.StatusBadRequest)
+		h.respondJSONError(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
 	task, err := h.service.GetByID(id)
 	if err != nil {
 		if errors.Is(err, errs.ErrTaskNotFound) {
-			h.RespondErrorJSON(w, "task not found", http.StatusNotFound)
+			h.respondJSONError(w, "task not found", http.StatusNotFound)
 			return
 		}
 
 		log.Printf("get by id: %v\n", err)
-		h.RespondErrorJSON(w, "internal server error", http.StatusInternalServerError)
+		h.respondJSONError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	h.RespondJSON(w, &task, http.StatusOK)
+	h.respondJSON(w, &task, http.StatusOK)
 }
 
 func (h *handler) GetByIDMetadata(w http.ResponseWriter, r *http.Request) {
@@ -116,22 +116,22 @@ func (h *handler) GetByIDMetadata(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		log.Printf("get by id metadata: %v\n", err)
-		h.RespondJSON(w, nil, http.StatusBadRequest)
+		h.respondJSON(w, nil, http.StatusBadRequest)
 		return
 	}
 
 	if err := h.service.GetByIDMetadata(id); err != nil {
 		if errors.Is(err, errs.ErrTaskNotFound) {
-			h.RespondJSON(w, nil, http.StatusNotFound)
+			h.respondJSON(w, nil, http.StatusNotFound)
 			return
 		}
 
 		log.Printf("get by id metadata: %v\n", err)
-		h.RespondJSON(w, nil, http.StatusInternalServerError)
+		h.respondJSON(w, nil, http.StatusInternalServerError)
 		return
 	}
 
-	h.RespondJSON(w, nil, http.StatusOK)
+	h.respondJSON(w, nil, http.StatusOK)
 }
 
 func (h *handler) ReplaceByID(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +139,7 @@ func (h *handler) ReplaceByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		log.Printf("replace by id: %v\n", err)
-		h.RespondErrorJSON(w, "invalid id", http.StatusBadRequest)
+		h.respondJSONError(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
@@ -150,23 +150,23 @@ func (h *handler) ReplaceByID(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Printf("replace by id: %v\n", err)
-		h.RespondErrorJSON(w, "invalid JSON", http.StatusBadRequest)
+		h.respondJSONError(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	task, err := h.service.ReplaceByID(id, input.Title, input.Status)
 	if err != nil {
 		if errors.Is(err, errs.ErrTaskNotFound) {
-			h.RespondErrorJSON(w, "task not found", http.StatusNotFound)
+			h.respondJSONError(w, "task not found", http.StatusNotFound)
 			return
 		}
 
 		log.Printf("replace by id: %v\n", err)
-		h.RespondErrorJSON(w, "internal server error", http.StatusInternalServerError)
+		h.respondJSONError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	h.RespondJSON(w, &task, http.StatusOK)
+	h.respondJSON(w, &task, http.StatusOK)
 }
 
 func (h *handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
@@ -174,18 +174,18 @@ func (h *handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		log.Printf("delete by id: %v\n", err)
-		h.RespondErrorJSON(w, "invalid id", http.StatusBadRequest)
+		h.respondJSONError(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.service.DeleteByID(id); err != nil {
 		if errors.Is(err, errs.ErrTaskNotFound) {
-			h.RespondErrorJSON(w, "task not found", http.StatusNotFound)
+			h.respondJSONError(w, "task not found", http.StatusNotFound)
 			return
 		}
 
 		log.Printf("task handler: replace by id: %v\n", err)
-		h.RespondErrorJSON(w, "internal server error", http.StatusInternalServerError)
+		h.respondJSONError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
