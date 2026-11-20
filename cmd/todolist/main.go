@@ -37,7 +37,7 @@ func main() {
 	}
 
 	log.Println("open db")
-	db, err := sql.Open("sqlite3", cfg.Database.URI)
+	db, err := sql.Open("sqlite3", cfg.Database.DSN)
 	if err != nil {
 		log.Printf("open db: %v\n", err)
 		return

@@ -17,7 +17,7 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	URI string `yaml:"uri"`
+	DSN string `yaml:"dsn"`
 }
 
 func Load(path string) (*Config, error) {
