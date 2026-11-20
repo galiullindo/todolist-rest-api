@@ -1,6 +1,7 @@
 bin
 build
 data
+blog
 
 configs/*
 !configs/config.prod.example.yaml

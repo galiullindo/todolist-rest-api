@@ -42,7 +42,7 @@ func run(m *testing.M) (code int) {
 		return 1
 	}
 
-	db, err := sql.Open("sqlite3", cfg.Database.URI)
+	db, err := sql.Open("sqlite3", cfg.Database.DSN)
 	if err != nil {
 		log.Printf("open db: %v\n", err)
 		return 1

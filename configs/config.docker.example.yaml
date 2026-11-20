@@ -1,8 +1,8 @@
 # config for docker image
 
 server:
-  host: "localhost"
+  host: "0.0.0.0"
   port: "8080"
 
 database:
-  uri: "/path/to/sqlite/file.db" 
+  dsn: "file:/todolist-rest-api/data/todolist.db?mode=rw"
