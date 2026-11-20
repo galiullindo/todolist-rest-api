@@ -37,7 +37,7 @@ func TestAPI(t *testing.T) {
 	t.Run("GET /tasks возвращает пустой список задач", func(t *testing.T) {
 		want := []model.Task{}
 		wantStatusCode := http.StatusOK
-		wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		resp, err := testClient.Get(testServer.URL + "/tasks")
 		if err != nil {
@@ -73,7 +73,7 @@ func TestAPI(t *testing.T) {
 			{ID: 3, Title: "Новая задача 3", Status: "Статус задачи 3"},
 		}
 		wantStatusCode := http.StatusOK
-		wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		for _, task := range want {
 			createTask(t, testDB, task)
@@ -106,7 +106,7 @@ func TestAPI(t *testing.T) {
 
 	t.Run("HEAD /tasks возвращает метаданные списка задач", func(t *testing.T) {
 		wantStatusCode := http.StatusOK
-		wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		resp, err := testClient.Head(testServer.URL + "/tasks")
 		if err != nil {
@@ -129,7 +129,7 @@ func TestAPI(t *testing.T) {
 
 		want := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
 		wantStatusCode := http.StatusCreated
-		wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		body := bytes.NewBuffer([]byte(`{"title":"Новая задача","status":"Статус задачи"}`))
 		resp, err := testClient.Post(testServer.URL+"/tasks", "application/json", body)
@@ -159,7 +159,7 @@ func TestAPI(t *testing.T) {
 
 	t.Run("POST /tasks возвращает 400 для невалидного JSON", func(t *testing.T) {
 		wantStatusCode := http.StatusBadRequest
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		body := bytes.NewBuffer([]byte(`{invalid json}`))
 		resp, err := testClient.Post(testServer.URL+"/tasks", "application/json", body)
@@ -172,10 +172,10 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("GET /tasks/{id} возвращает задачу по id", func(t *testing.T) {
@@ -183,7 +183,7 @@ func TestAPI(t *testing.T) {
 
 		want := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
 		wantStatusCode := http.StatusOK
-		wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		createTask(t, testDB, want)
 
@@ -214,7 +214,7 @@ func TestAPI(t *testing.T) {
 
 	t.Run("GET /tasks/{id} возвращает 400 для невалидного id", func(t *testing.T) {
 		wantStatusCode := http.StatusBadRequest
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		resp, err := testClient.Get(testServer.URL + "/tasks/abc")
 		if err != nil {
@@ -226,15 +226,15 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("GET /tasks/{id} возвращает 404 для несуществующей задчи", func(t *testing.T) {
 		wantStatusCode := http.StatusNotFound
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		resp, err := testClient.Get(testServer.URL + "/tasks/1")
 		if err != nil {
@@ -246,17 +246,17 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("HEAD /tasks/{id} возвращает 200 для существующей задачи", func(t *testing.T) {
 		defer rollbackToSavepoint(testDB)
 
 		wantStatusCode := http.StatusOK
-		wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		task := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
 		createTask(t, testDB, task)
@@ -279,7 +279,7 @@ func TestAPI(t *testing.T) {
 
 	t.Run("HEAD /tasks/{id} возвращает 400 для невалидного id", func(t *testing.T) {
 		wantStatusCode := http.StatusBadRequest
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		resp, err := testClient.Head(testServer.URL + "/tasks/abc")
 		if err != nil {
@@ -291,15 +291,15 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("HEAD /tasks/{id} возвращает 404 для несуществующей задачи", func(t *testing.T) {
 		wantStatusCode := http.StatusNotFound
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		resp, err := testClient.Head(testServer.URL + "/tasks/1")
 		if err != nil {
@@ -311,10 +311,10 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("PUT /tasks/{id} заменяет все поля задачи по id", func(t *testing.T) {
@@ -322,7 +322,7 @@ func TestAPI(t *testing.T) {
 
 		want := model.Task{ID: 1, Title: "Измененная задача", Status: "Измененный статус"}
 		wantStatusCode := http.StatusOK
-		wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		task := model.Task{ID: 1, Title: "Новая задача", Status: "Статус задачи"}
 		createTask(t, testDB, task)
@@ -361,7 +361,7 @@ func TestAPI(t *testing.T) {
 
 	t.Run("PUT /tasks/{id} возвращает 400 для невалидного id", func(t *testing.T) {
 		wantStatusCode := http.StatusBadRequest
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		body := bytes.NewBuffer([]byte(`{"title":"Измененная задача","status":"Измененный статус"}`))
 		req, err := http.NewRequest(http.MethodPut, testServer.URL+"/tasks/abc", body)
@@ -380,15 +380,15 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("PUT /tasks/{id} возвращает 400 для невалидного JSON", func(t *testing.T) {
 		wantStatusCode := http.StatusBadRequest
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		body := bytes.NewBuffer([]byte(`{invalid json}`))
 		req, err := http.NewRequest(http.MethodPut, testServer.URL+"/tasks/1", body)
@@ -407,15 +407,15 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("PUT /tasks/{id} возвращает 404 для несуществующего id", func(t *testing.T) {
 		wantStatusCode := http.StatusNotFound
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		body := bytes.NewBuffer([]byte(`{"title":"Измененная задача","status":"Измененный статус"}`))
 		req, err := http.NewRequest(http.MethodPut, testServer.URL+"/tasks/1", body)
@@ -434,10 +434,10 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("DELETE /tasks/{id} удаляет задачу по id", func(t *testing.T) {
@@ -472,7 +472,7 @@ func TestAPI(t *testing.T) {
 
 	t.Run("DELETE /tasks/{id} возвращает 400 для невалидного id", func(t *testing.T) {
 		wantStatusCode := http.StatusBadRequest
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		req, err := http.NewRequest(http.MethodDelete, testServer.URL+"/tasks/abc", nil)
 		if err != nil {
@@ -489,15 +489,15 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 
 	t.Run("DELETE /tasks/{id} возвращает 404 для несуществующего id", func(t *testing.T) {
 		wantStatusCode := http.StatusNotFound
-		// wantContentType := "application/json"
+		wantContentType := "application/json; charset=utf-8"
 
 		req, err := http.NewRequest(http.MethodDelete, testServer.URL+"/tasks/1", nil)
 		if err != nil {
@@ -514,9 +514,9 @@ func TestAPI(t *testing.T) {
 			t.Errorf("status code got %d, want %d\n", resp.StatusCode, wantStatusCode)
 		}
 
-		// contentType := resp.Header.Get("Content-Type")
-		// if contentType != wantContentType {
-		// 	t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
-		// }
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != wantContentType {
+			t.Errorf("content type got %s, want %s\n", contentType, wantContentType)
+		}
 	})
 }
